@@ -1,0 +1,23 @@
+@model SmartCampusPortal.Models.ServiceRequest
+@using SmartCampusPortal.Models
+@{
+    ViewBag.Title = "Update Status";
+}
+
+<h2>Update Request Status</h2>
+
+<p class="muted">
+    Request #@Model.RequestId &ndash; @Model.StudentName &ndash; @Model.ServiceType: @Model.Description
+</p>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.RequestId" />
+
+    <label for="status">Status</label>
+    @Html.DropDownList("status", new SelectList(Lookups.Statuses, Model.Status)) <br /><br />
+
+    <input type="submit" value="Update Status" class="btn" />
+    @Html.ActionLink("Cancel", "Index", new { }, new { @class = "btn btn-light" })
+}
