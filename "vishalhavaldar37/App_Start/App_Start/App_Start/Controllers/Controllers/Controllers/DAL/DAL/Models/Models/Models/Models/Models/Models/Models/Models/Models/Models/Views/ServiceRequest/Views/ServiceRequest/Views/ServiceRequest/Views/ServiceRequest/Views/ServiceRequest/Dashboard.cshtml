@@ -1,0 +1,206 @@
+@using SmartCampusPortal.Models
+@{
+    ViewBag.Title = "API Dashboard";
+}
+
+<h2>Live Dashboard <span class="muted" style="font-size:14px">(this page talks only to the Web API)</span></h2>
+
+<div id="message"></div>
+
+<div class="cards">
+    <div class="card"><div class="muted">Total</div><div class="num" id="cTotal">-</div></div>
+    <div class="card"><div class="muted">Pending</div><div class="num" id="cPending">-</div></div>
+    <div class="card"><div class="muted">In Progress</div><div class="num" id="cInProgress">-</div></div>
+    <div class="card"><div class="muted">Completed</div><div class="num" id="cCompleted">-</div></div>
+    <div class="card"><div class="muted">High priority (open)</div><div class="num" id="cHigh">-</div></div>
+</div>
+
+<div class="panel">
+    <h3 style="margin-top:0">Quick add (POST api/ServiceApi)</h3>
+    <div class="filters">
+        <div><label for="nName">Student Name</label><input type="text" id="nName" /></div>
+        <div><label for="nDept">Department</label><input type="text" id="nDept" /></div>
+        <div>
+            <label for="nType">Service Type</label>
+            @Html.DropDownList("nType", new SelectList(Lookups.ServiceTypes))
+        </div>
+        <div>
+            <label for="nPriority">Priority</label>
+            @Html.DropDownList("nPriority", new SelectList(Lookups.Priorities, "Medium"))
+        </div>
+        <div><label for="nDesc">Description</label><input type="text" id="nDesc" /></div>
+        <div><button type="button" class="btn" id="btnAdd">Add Request</button></div>
+    </div>
+</div>
+
+<div class="panel">
+    <h3 style="margin-top:0">Requests (GET api/ServiceApi)</h3>
+    <div class="filters">
+        <div><label for="fSearch">Search</label><input type="text" id="fSearch" /></div>
+        <div>
+            <label for="fType">Service Type</label>
+            @Html.DropDownList("fType", new SelectList(Lookups.ServiceTypes), "All")
+        </div>
+        <div>
+            <label for="fPriority">Priority</label>
+            @Html.DropDownList("fPriority", new SelectList(Lookups.Priorities), "All")
+        </div>
+        <div>
+            <label for="fStatus">Status</label>
+            @Html.DropDownList("fStatus", new SelectList(Lookups.Statuses), "All")
+        </div>
+        <div><button type="button" class="btn" id="btnFilter">Filter</button></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Student</th>
+                <th>Department</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Status (PUT)</th>
+                <th>Date</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var apiBase = '@Url.Content("~/api/ServiceApi")';
+            var statuses = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Lookups.Statuses));
+
+            function esc(s) {
+                return $('<div>').text(s == null ? '' : s).html();
+            }
+
+            function showMessage(text, isError) {
+                $('#message').html('<div class="alert ' + (isError ? 'alert-error' : '') + '">' + text + '</div>');
+            }
+
+            // Turns a Web API error response into readable text
+            function errorText(xhr) {
+                var r = xhr.responseJSON;
+                if (!r) return 'Request failed (' + xhr.status + ').';
+                if (r.modelState) {
+                    var all = [];
+                    $.each(r.modelState, function (k, arr) { all = all.concat(arr); });
+                    return esc(all.join(' '));
+                }
+                return esc(r.message || r.Message || 'Request failed (' + xhr.status + ').');
+            }
+
+            function loadSummary() {
+                $.getJSON(apiBase + '/Summary').done(function (s) {
+                    $('#cTotal').text(s.total);
+                    $('#cPending').text(s.pending);
+                    $('#cInProgress').text(s.inProgress);
+                    $('#cCompleted').text(s.completed);
+                    $('#cHigh').text(s.highPriorityOpen);
+                });
+            }
+
+            function loadRows() {
+                var query = {
+                    search: $('#fSearch').val(),
+                    serviceType: $('#fType').val(),
+                    priority: $('#fPriority').val(),
+                    status: $('#fStatus').val()
+                };
+
+                $.getJSON(apiBase, query).done(function (items) {
+                    var html = '';
+                    $.each(items, function (i, r) {
+                        var options = '';
+                        $.each(statuses, function (j, st) {
+                            options += '<option' + (st === r.status ? ' selected' : '') + '>' + esc(st) + '</option>';
+                        });
+
+                        html += '<tr>' +
+                            '<td>' + r.requestId + '</td>' +
+                            '<td>' + esc(r.studentName) + '</td>' +
+                            '<td>' + esc(r.department) + '</td>' +
+                            '<td>' + esc(r.serviceType) + '</td>' +
+                            '<td>' + esc(r.description) + '</td>' +
+                            '<td class="' + (r.priority === 'High' ? 'high' : '') + '">' + esc(r.priority) + '</td>' +
+                            '<td><select class="statusSel" data-id="' + r.requestId + '">' + options + '</select></td>' +
+                            '<td>' + new Date(r.requestDate).toLocaleString() + '</td>' +
+                            '<td><button type="button" class="btn btn-danger delBtn" data-id="' + r.requestId + '">Delete</button></td>' +
+                            '</tr>';
+                    });
+
+                    if (!html) html = '<tr><td colspan="9" class="muted">No service requests found.</td></tr>';
+                    $('#rows').html(html);
+                }).fail(function (xhr) {
+                    showMessage(errorText(xhr), true);
+                });
+            }
+
+            function refresh() { loadSummary(); loadRows(); }
+
+            // POST api/ServiceApi
+            $('#btnAdd').on('click', function () {
+                var body = {
+                    studentName: $('#nName').val(),
+                    department: $('#nDept').val(),
+                    serviceType: $('#nType').val(),
+                    priority: $('#nPriority').val(),
+                    description: $('#nDesc').val()
+                };
+
+                $.ajax({
+                    url: apiBase,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(body)
+                }).done(function (created) {
+                    showMessage('Request #' + created.requestId + ' created (HTTP 201).', false);
+                    $('#nName, #nDept, #nDesc').val('');
+                    refresh();
+                }).fail(function (xhr) {
+                    showMessage(errorText(xhr), true);
+                });
+            });
+
+            // PUT api/ServiceApi/UpdateStatus/{id}
+            $('#rows').on('change', '.statusSel', function () {
+                var id = $(this).data('id');
+                $.ajax({
+                    url: apiBase + '/UpdateStatus/' + id,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify($(this).val())
+                }).done(function () {
+                    showMessage('Status of request #' + id + ' updated.', false);
+                    refresh();
+                }).fail(function (xhr) {
+                    showMessage(errorText(xhr), true);
+                });
+            });
+
+            // DELETE api/ServiceApi/{id}
+            $('#rows').on('click', '.delBtn', function () {
+                var id = $(this).data('id');
+                if (!confirm('Delete request #' + id + '?')) return;
+                $.ajax({ url: apiBase + '/' + id, type: 'DELETE' })
+                    .done(function () {
+                        showMessage('Request #' + id + ' deleted.', false);
+                        refresh();
+                    })
+                    .fail(function (xhr) {
+                        showMessage(errorText(xhr), true);
+                    });
+            });
+
+            $('#btnFilter').on('click', loadRows);
+            $('#fSearch').on('keyup', function (e) { if (e.which === 13) loadRows(); });
+            refresh();
+        });
+    </script>
+}
