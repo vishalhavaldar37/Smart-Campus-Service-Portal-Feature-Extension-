@@ -1,0 +1,15 @@
+@model SmartCampusPortal.Models.ServiceRequest
+@{
+    ViewBag.Title = "Edit Request";
+}
+
+<h2>Edit Service Request #@Model.RequestId</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.RequestId)
+    @Html.Partial("_RequestForm", Model) <br />
+    <input type="submit" value="Save Changes" class="btn" />
+    @Html.ActionLink("Back to List", "Index", new { }, new { @class = "btn btn-light" })
+}
