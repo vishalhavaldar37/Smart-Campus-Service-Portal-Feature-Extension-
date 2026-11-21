@@ -1,0 +1,24 @@
+@model SmartCampusPortal.Models.ServiceRequest
+@using SmartCampusPortal.Models
+
+@Html.ValidationSummary(true)
+
+<label>@Html.DisplayNameFor(m => m.StudentName)</label>
+@Html.TextBoxFor(m => m.StudentName)
+@Html.ValidationMessageFor(m => m.StudentName)
+
+<label>@Html.DisplayNameFor(m => m.Department)</label>
+@Html.TextBoxFor(m => m.Department)
+@Html.ValidationMessageFor(m => m.Department)
+
+<label>@Html.DisplayNameFor(m => m.ServiceType)</label>
+@Html.DropDownListFor(m => m.ServiceType, new SelectList(Lookups.ServiceTypes))
+@Html.ValidationMessageFor(m => m.ServiceType)
+
+<label>@Html.DisplayNameFor(m => m.Description)</label>
+@Html.TextAreaFor(m => m.Description)
+@Html.ValidationMessageFor(m => m.Description)
+
+<label>@Html.DisplayNameFor(m => m.Priority)</label>
+@Html.DropDownListFor(m => m.Priority, new SelectList(Lookups.Priorities))
+@Html.ValidationMessageFor(m => m.Priority)
