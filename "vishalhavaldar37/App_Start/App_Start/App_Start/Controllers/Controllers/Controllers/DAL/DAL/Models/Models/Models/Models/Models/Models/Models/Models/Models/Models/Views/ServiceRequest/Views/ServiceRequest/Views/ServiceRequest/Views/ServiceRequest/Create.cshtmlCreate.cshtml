@@ -1,0 +1,14 @@
+@model SmartCampusPortal.Models.ServiceRequest
+@{
+    ViewBag.Title = "Create Request";
+}
+
+<h2>Create Campus Service Request</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.Partial("_RequestForm", Model) <br />
+    <input type="submit" value="Submit Request" class="btn" />
+    @Html.ActionLink("Back to List", "Index", new { }, new { @class = "btn btn-light" })
+}
