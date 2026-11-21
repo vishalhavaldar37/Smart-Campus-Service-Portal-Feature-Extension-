@@ -1,0 +1,24 @@
+@model SmartCampusPortal.Models.ServiceRequest
+@{
+    ViewBag.Title = "Request Details";
+}
+
+<h2>Service Request #@Model.RequestId</h2>
+
+<div class="panel">
+    <dl class="details">
+        <dt>@Html.DisplayNameFor(m => m.StudentName)</dt><dd>@Model.StudentName</dd>
+        <dt>@Html.DisplayNameFor(m => m.Department)</dt><dd>@Model.Department</dd>
+        <dt>@Html.DisplayNameFor(m => m.ServiceType)</dt><dd>@Model.ServiceType</dd>
+        <dt>@Html.DisplayNameFor(m => m.Description)</dt><dd>@Model.Description</dd>
+        <dt>@Html.DisplayNameFor(m => m.Priority)</dt><dd>@Model.Priority</dd>
+        <dt>@Html.DisplayNameFor(m => m.Status)</dt>
+        <dd><span class="badge @(Model.Status.Replace(" ", "").ToLower())">@Model.Status</span></dd>
+        <dt>@Html.DisplayNameFor(m => m.RequestDate)</dt><dd>@Model.RequestDate.ToString("dd MMM yyyy HH:mm")</dd>
+    </dl>
+</div>
+
+@Html.ActionLink("Edit", "Edit", new { id = Model.RequestId }, new { @class = "btn" })
+@Html.ActionLink("Update Status", "UpdateStatus", new { id = Model.RequestId }, new { @class = "btn" })
+@Html.ActionLink("Delete", "Delete", new { id = Model.RequestId }, new { @class = "btn btn-danger" })
+@Html.ActionLink("Back to List", "Index", new { }, new { @class = "btn btn-light" })
