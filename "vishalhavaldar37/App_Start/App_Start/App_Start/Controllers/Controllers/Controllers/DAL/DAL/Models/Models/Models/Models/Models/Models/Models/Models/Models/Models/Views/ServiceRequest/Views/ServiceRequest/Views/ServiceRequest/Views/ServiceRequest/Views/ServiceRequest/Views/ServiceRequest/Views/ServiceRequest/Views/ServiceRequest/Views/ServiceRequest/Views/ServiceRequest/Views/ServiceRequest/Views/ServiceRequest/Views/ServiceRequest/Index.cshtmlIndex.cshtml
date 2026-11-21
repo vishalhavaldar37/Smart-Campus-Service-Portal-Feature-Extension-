@@ -1,0 +1,83 @@
+@model SmartCampusPortal.Models.ServiceRequestIndexViewModel
+@using SmartCampusPortal.Models
+@{
+    ViewBag.Title = "All Requests";
+}
+
+<h2>Smart Campus Service Requests</h2>
+
+<div class="cards">
+    <div class="card"><div class="muted">Total</div><div class="num">@Model.Summary.Total</div></div>
+    <div class="card"><div class="muted">Pending</div><div class="num">@Model.Summary.Pending</div></div>
+    <div class="card"><div class="muted">In Progress</div><div class="num">@Model.Summary.InProgress</div></div>
+    <div class="card"><div class="muted">Completed</div><div class="num">@Model.Summary.Completed</div></div>
+    <div class="card"><div class="muted">High priority (open)</div><div class="num">@Model.Summary.HighPriorityOpen</div></div>
+</div>
+
+<div class="panel">
+    @using (Html.BeginForm("Index", "ServiceRequest", FormMethod.Get, new { @class = "filters" }))
+    {
+        <div>
+            <label for="search">Search</label>
+            @Html.TextBox("search", Model.Filter.Search, new { placeholder = "name, department, description" })
+        </div>
+        <div>
+            <label for="serviceType">Service Type</label>
+            @Html.DropDownList("serviceType", new SelectList(Lookups.ServiceTypes, Model.Filter.ServiceType), "All")
+        </div>
+        <div>
+            <label for="priority">Priority</label>
+            @Html.DropDownList("priority", new SelectList(Lookups.Priorities, Model.Filter.Priority), "All")
+        </div>
+        <div>
+            <label for="status">Status</label>
+            @Html.DropDownList("status", new SelectList(Lookups.Statuses, Model.Filter.Status), "All")
+        </div>
+        <div>
+            <input type="submit" value="Filter" class="btn" />
+            @Html.ActionLink("Reset", "Index", new { }, new { @class = "btn btn-light" })
+        </div>
+    }
+</div>
+
+<p>@Html.ActionLink("Create New Request", "Create", new { }, new { @class = "btn" })</p>
+
+@if (Model.Requests.Count == 0)
+{
+    <p class="muted">No service requests found.</p>
+}
+else
+{
+    <table>
+        <tr>
+            <th>Request ID</th>
+            <th>Student Name</th>
+            <th>Department</th>
+            <th>Service Type</th>
+            <th>Description</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        @foreach (var item in Model.Requests)
+        {
+            <tr>
+                <td>@item.RequestId</td>
+                <td>@item.StudentName</td>
+                <td>@item.Department</td>
+                <td>@item.ServiceType</td>
+                <td>@item.Description</td>
+                <td class="@(item.Priority == "High" ? "high" : "")">@item.Priority</td>
+                <td><span class="badge @(item.Status.Replace(" ", "").ToLower())">@item.Status</span></td>
+                <td>@item.RequestDate.ToString("dd MMM yyyy HH:mm")</td>
+                <td class="actions">
+                    @Html.ActionLink("Details", "Details", new { id = item.RequestId })
+                    @Html.ActionLink("Edit", "Edit", new { id = item.RequestId })
+                    @Html.ActionLink("Update Status", "UpdateStatus", new { id = item.RequestId })
+                    @Html.ActionLink("Delete", "Delete", new { id = item.RequestId })
+                </td>
+            </tr>
+        }
+    </table>
+}
